@@ -41,10 +41,11 @@ def read_img(in_path, direction='axial', simulate_lr=True):
 # -----------------------
 
 class ImgTrain(data.Dataset):
-    def __init__(self, in_path, sample_size, thick_direction, simulate_lr=True, is_train=True):
+    def __init__(self, in_path, sample_size, thick_direction, simulate_lr=True, is_train=True, stage=1):
         self.sample_size = sample_size
         self.patch, self.axis = read_img(in_path=in_path, direction=thick_direction, simulate_lr=simulate_lr)
         self.is_train = is_train
+        self.stage = stage
 
     def __len__(self):
         return len(self.patch)
@@ -53,7 +54,7 @@ class ImgTrain(data.Dataset):
         subject_img = self.patch[item]
         thick_axis = self.axis[item]
         # randomly choice a slice to resample
-        if self.is_train:
+        if self.is_train and self.stage == 1:
             down_axis = random.choice(np.delete(np.arange(3), thick_axis))
         else:
             down_axis = thick_axis
@@ -89,7 +90,7 @@ class ImgTrain(data.Dataset):
         return slice_img_0, slice_img_1, slice_img_2
 
 
-def loader_train(in_path, batch_size, thick_direction, sample_size, is_train):
+def loader_train(in_path, batch_size, thick_direction, sample_size, is_train, stage=1):
     """
     :param in_path_hr: the path of HR patches
     :param batch_size: N in Equ. 3
@@ -98,7 +99,7 @@ def loader_train(in_path, batch_size, thick_direction, sample_size, is_train):
     :return:
     """
     return data.DataLoader(
-        dataset=ImgTrain(in_path=in_path, sample_size=sample_size, thick_direction=thick_direction, simulate_lr=is_train, is_train=is_train),
+        dataset=ImgTrain(in_path=in_path, sample_size=sample_size, thick_direction=thick_direction, simulate_lr=is_train, is_train=is_train, stage=stage),
         batch_size=batch_size,
         shuffle=is_train,
         drop_last=is_train

@@ -1,5 +1,6 @@
 import torch
 import os
+import numpy as np
 from dataset import loader_train
 from network import InterpolationNetwork
 from utils.util import print_current_losses
@@ -14,6 +15,8 @@ def train_stage_1(args):
                                   thick_direction=args.thick_direction, batch_size=args.batch_size, is_train=False)
 
     model = InterpolationNetwork()
+    if args.resume:
+        model.load_state_dict(torch.load(args.resume))
     if args.num_gpus > 1:
         model = torch.nn.DataParallel(model)
     model = model.cuda()
@@ -42,12 +45,13 @@ def train_stage_1(args):
         scheduler.step()
         if epoch % 10 == 0:
             model.eval()
+            val_loss = []
             with torch.no_grad():
                 for i, data in enumerate(val_dataloader):
                     slice_img_0, slice_img_1, slice_img_2 = data
                     generated_slice = model(slice_img_0.cuda(), slice_img_2.cuda())
                     loss = criterionMSE(generated_slice, slice_img_1.cuda())
-                    print("Validation loss: ", loss.item())
+                    val_loss.append(loss.item())
 
                 # save the model
                 if args.num_gpus > 1:
@@ -55,6 +59,7 @@ def train_stage_1(args):
                 else:
                     torch.save(model.state_dict(), os.path.join(save_dir, f'checkpoint/model_stage_1_{epoch}.pth'))
 
+            print('Epoch: {}, Val Loss: {}'.format(epoch, np.mean(val_loss)))
             model.train()
 
 

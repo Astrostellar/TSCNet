@@ -68,3 +68,59 @@ class InterpolationNetwork(nn.Module):
         feature = torch.cat([feature_1, feature_2], 1)
         out = self.slice_reconstruction(feature)
         return out
+
+
+class DiscriminatorForVGG(nn.Module):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            channels: int,
+    ) -> None:
+        super(DiscriminatorForVGG, self).__init__()
+        self.features = nn.Sequential(
+            # input size. (3) x 96 x 96
+            nn.Conv2d(in_channels, channels, (3, 3), (1, 1), (1, 1), bias=True),
+            nn.LeakyReLU(0.2, True),
+            # state size. (64) x 48 x 48
+            nn.Conv2d(channels, channels, (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(channels),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(channels, int(2 * channels), (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(int(2 * channels)),
+            nn.LeakyReLU(0.2, True),
+            # state size. (128) x 24 x 24
+            nn.Conv2d(int(2 * channels), int(2 * channels), (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(int(2 * channels)),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(int(2 * channels), int(4 * channels), (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(int(4 * channels)),
+            nn.LeakyReLU(0.2, True),
+            # state size. (256) x 12 x 12
+            nn.Conv2d(int(4 * channels), int(4 * channels), (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(int(4 * channels)),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(int(4 * channels), int(8 * channels), (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(int(8 * channels)),
+            nn.LeakyReLU(0.2, True),
+            # state size. (512) x 6 x 6
+            nn.Conv2d(int(8 * channels), int(8 * channels), (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(int(8 * channels)),
+            nn.LeakyReLU(0.2, True),
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(int(8 * channels) * 6 * 6, 1024),
+            nn.LeakyReLU(0.2, True),
+            nn.Linear(1024, out_channels),
+        )
+
+    def forward(self, x):
+        # Input image size must equal 96
+        assert x.size(2) == 96 and x.size(3) == 96, "Input image size must be is 96x96"
+
+        x = self.features(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+
+        return x
