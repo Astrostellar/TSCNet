@@ -110,14 +110,14 @@ class DiscriminatorForVGG(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(int(8 * channels) * 6 * 6, 1024),
+            nn.Linear(int(8 * channels) * 16 * 16, 1024),
             nn.LeakyReLU(0.2, True),
             nn.Linear(1024, out_channels),
         )
 
     def forward(self, x):
         # Input image size must equal 96
-        assert x.size(2) == 96 and x.size(3) == 96, "Input image size must be is 96x96"
+        # assert x.size(2) == 96 and x.size(3) == 96, "Input image size must be is 96x96"
 
         x = self.features(x)
         x = torch.flatten(x, 1)

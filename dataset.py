@@ -111,32 +111,42 @@ def loader_train(in_path, batch_size, thick_direction, sample_size, is_train, st
 # -----------------------
 
 class ImgTest(data.Dataset):
-    def __init__(self, in_path_lr, scale):
-        self.img_lr = []
-        self.xyz_hr = []
-        # load lr image
-        lr_vol = sitk.GetArrayFromImage(sitk.ReadImage(in_path_lr))
-        lr_vol = lr_vol[:-10,:,:]
-        print(lr_vol.shape)
-        lr_vol = nd.interpolation.zoom(lr_vol, [1 / scale, 1, 1], order=3)
-        print(lr_vol.shape)
-        self.img_lr.append(lr_vol)
-        for img_lr in self.img_lr:
-            temp_size = np.array(img_lr.shape).astype(float)
-            temp_size[0] = temp_size[0] * scale
-            temp_size = list(temp_size.astype(int))
-            self.xyz_hr.append(utils.make_coord(temp_size, flatten=True))
+    def __init__(self, in_path, scale, direction='axial', simulate_lr=True):
+        self.direction = direction
+        self.scale = scale
+        self.simulate_lr = simulate_lr
+        
+        self.data = self.read_img(in_path)
+        print(f'loading data {in_path} with shape: {self.data.shape}')
 
+    def read_img(self, in_path):
+        self.img = nib.load(in_path)
+        orientation = nib.aff2axcodes(self.img.affine)
+        self.axis = determine_axis(orientation, direction=self.direction)
+        img_vol = np.array(self.img.dataobj)
+        img_vol = norm_01(img_vol)
+        if self.simulate_lr:
+            img_vol = downsample(img_vol, current_res=1, downsample_res=2, axis=self.axis)
+        return img_vol
+    
     def __len__(self):
-        return len(self.img_lr)
+        return self.data.shape[self.axis] - 1
 
     def __getitem__(self, item):
-        return self.img_lr[item], self.xyz_hr[item]
+        # randomly choice a slice along the down_axis
+        slice_idx_0 = item
+        # get the 2D slice
+        slice_img_0 = np.take(self.data, slice_idx_0, axis=self.axis)
+
+        slice_idx_1 = slice_idx_0 + 1 # the median slice
+        slice_img_1 = np.take(self.data, slice_idx_1, axis=self.axis)
+        
+        return slice_img_0, slice_img_1
 
 
-def loader_test(in_path_lr, scale):
+def loader_test(dataset):
     return data.DataLoader(
-        dataset=ImgTest(in_path_lr=in_path_lr, scale=scale),
+        dataset=dataset,
         batch_size=1,
         shuffle=False
     )

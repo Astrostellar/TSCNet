@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 from train_stage_1 import train_stage_1
 from train_stage_2 import train_stage_2
+from evaluate import evaluate
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,9 +17,12 @@ if __name__ == '__main__':
     parser.add_argument("--project_name", type=str, default='SKI10', help="the name of the project")
     parser.add_argument("--stage", type=int, default=1, help="the stage for training, choose from [1, 2, 3]")
     parser.add_argument("--resume", type=str, default=None, help="the path of the model to resume")
+    parser.add_argument("--eval-only", action="store_true", help="perform evaluation only")
     
     args = parser.parse_args()
-    if args.stage==1:
+    if args.eval_only:
+        evaluate(args)
+    elif args.stage==1:
         train_stage_1(args)
     elif args.stage==2:
         train_stage_2(args)

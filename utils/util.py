@@ -102,9 +102,9 @@ def evaluate_slice(Gimg, Limg):
     c_mae = np.mean(np.abs(Limg - Gimg))
     return c_psnr, c_ssim, c_mae
 
-def evaluate_3D(Gimg, Limg):
-    c_psnr = compare_psnr(Limg, Gimg)
-    c_ssim = compare_ssim(Limg, Gimg)
+def evaluate_3D(Gimg, Limg, data_range=2):
+    c_psnr = compare_psnr(Limg, Gimg, data_range=data_range)
+    c_ssim = compare_ssim(Limg, Gimg, data_range=data_range)
     c_mae = np.mean(np.abs(Limg - Gimg))
     return c_psnr, c_ssim, c_mae
 
