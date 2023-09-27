@@ -31,7 +31,7 @@ def read_img(in_path, direction='axial', simulate_lr=True):
         img_vol = np.array(img.dataobj)
         img_vol = norm_01(img_vol)
         if simulate_lr:
-            img_vol = downsample(img_vol, current_res=1, downsample_res=2, axis=axis)
+            img_vol = downsample(img_vol, current_res=1, downsample_res=4, axis=axis)
         img_list.append(img_vol)
         axis_list.append(axis)
     return img_list, axis_list
@@ -126,7 +126,7 @@ class ImgTest(data.Dataset):
         img_vol = np.array(self.img.dataobj)
         img_vol = norm_01(img_vol)
         if self.simulate_lr:
-            img_vol = downsample(img_vol, current_res=1, downsample_res=2, axis=self.axis)
+            img_vol = downsample(img_vol, current_res=1, downsample_res=self.scale, axis=self.axis)
         return img_vol
     
     def __len__(self):

@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from train_stage_1 import train_stage_1
 from train_stage_2 import train_stage_2
-from evaluate import evaluate
+from evaluate_4x import evaluate
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

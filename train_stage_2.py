@@ -136,9 +136,9 @@ def train_stage_2(args):
 
                     # save the model
                     if args.num_gpus > 1:
-                        torch.save(model.module.state_dict(), os.path.join(save_dir, f'checkpoint/model_stage_1_{epoch}.pth'))
+                        torch.save(model.module.state_dict(), os.path.join(save_dir, f'checkpoint/model_stage_2_{epoch}.pth'))
                     else:
-                        torch.save(model.state_dict(), os.path.join(save_dir, f'checkpoint/model_stage_1_{epoch}.pth'))
+                        torch.save(model.state_dict(), os.path.join(save_dir, f'checkpoint/model_stage_2_{epoch}.pth'))
 
                 print('Epoch: {}, Val Loss: {:.6}, psnr: {:.6}, ssim: {:.6}, mae" {:.6}'.format(epoch, np.mean(val_loss), c_psnr/(i+1), c_ssim/(i+1), c_mae/(i+1)))
                 model.train()
